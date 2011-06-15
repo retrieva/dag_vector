@@ -3,6 +3,9 @@ Author: Daisuke Okanohara (daisuke.okanoahra@gmail.com)
 dag_vector is direct accessible gamma code vector. 
 dag_vector stores positive values space-efficiently, and supports push_back() and fast random access. 
 
+The gamma code assigns shorter codes for smaller values.
+For example, the value 0 is represented as "0" and the value 6 is represented as "11010".
+
 comp_vector is compressed vector for arbitrary objects using dag_vector inside.
 The object should support comparator (bool operator< (const object& ) const). 
 If the frequency of elements is skewed, comp_vector efficiently stores objects while allow fast random access.  
@@ -65,11 +68,4 @@ assert(cv[1] == "fuga");
 assert(cv[2] == "hoge");
 assert(cv[3] == "hoge");
 assert(cv[4] == "fuga");
-
-
-
-
-
-
-
 

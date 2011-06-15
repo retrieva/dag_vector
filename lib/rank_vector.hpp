@@ -124,11 +124,11 @@ public:
     return x * 0x0101010101010101LLU >> 56;
   }
 
-  std::vector<uint64_t> bits_;
-  std::vector<uint64_t> lblocks_;
-  std::vector<uint8_t> sblocks_; 
-  uint64_t size_;
-  uint64_t one_num_;
+  std::vector<uint64_t> bits_;    /// bit array
+  std::vector<uint64_t> lblocks_; /// rank results for large blocks
+  std::vector<uint8_t> sblocks_;  /// rank results for small blocks
+  uint64_t size_;                 /// the length of bit array
+  uint64_t one_num_;              /// the number of ones in the bit array
 };
 
 

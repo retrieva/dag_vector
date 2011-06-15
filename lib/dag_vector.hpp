@@ -183,24 +183,24 @@ public:
 
   class const_iterator : public std::iterator<std::random_access_iterator_tag, uint64_t, size_t> {
   public:
-    const_iterator(const dag_vector* v) : v_(v) {
-      bitval_poses_.resize(v_->bitvals_.size());
-      bitunary_poses_.resize(v_->bitunaries_.size());
+    const_iterator(const dag_vector* dagv) : dagv_(dagv) {
+      bitval_poses_.resize(dagv_->bitvals_.size());
+      bitunary_poses_.resize(dagv_->bitunaries_.size());
       max_shift_pos_ = 0;
       cur_shift_ = cur_shift();
     }
 
     const_iterator& end(){
       for (size_t i = 0; i < bitval_poses_.size(); ++i){
-        bitval_poses_[i] = v_->bitvals_[i].size();
+        bitval_poses_[i] = dagv_->bitvals_[i].size();
 
       }
 
       for (size_t i = 0; i < bitunary_poses_.size(); ++i){
-        bitunary_poses_[i] = v_->bitunaries_[i].size();
+        bitunary_poses_[i] = dagv_->bitunaries_[i].size();
       }
 
-      max_shift_pos_ = v_->max_shift_num_;
+      max_shift_pos_ = dagv_->max_shift_num_;
       cur_shift_ = bitval_poses_.size();
       return *this;
     }
@@ -256,18 +256,10 @@ public:
     }
 
     bool operator==(const const_iterator& it) const{
-      if (v_ != it.v_) return false;
-      if (bitval_poses_.size() != it.bitval_poses_.size()) return false; 
-      for (size_t i = 0; i < bitval_poses_.size(); ++i){
-        if (bitval_poses_[i] != it.bitval_poses_[i]) return false;
-      }
-      if (bitunary_poses_.size() != it.bitunary_poses_.size()) return false; 
-      for (size_t i = 0; i < bitunary_poses_.size(); ++i){
-        if (bitunary_poses_[i] != it.bitunary_poses_[i]) return false;
-      }
-      if (max_shift_pos_ != it.max_shift_pos_){
-        return false;
-      }
+      if (dagv_ != it.dagv_) return false;
+      if (bitval_poses_ != it.bitval_poses_) return false;
+      if (bitunary_poses_ != it.bitunary_poses_) return false;
+      if (max_shift_pos_ != it.max_shift_pos_)  return false;
       return true;
     }
 
@@ -279,7 +271,7 @@ public:
       uint64_t val = 0;
       uint64_t shift = 0;
       for ( ; shift < cur_shift_; ++shift){ 
-        val += v_->bitvals_[shift].get_bit(bitval_poses_[shift]) << shift;
+        val += dagv_->bitvals_[shift].get_bit(bitval_poses_[shift]) << shift;
       }
       val += (1LLU) << shift;
       return val-1;
@@ -287,15 +279,15 @@ public:
 
   private:
     uint64_t cur_shift() const{
-      for (uint64_t shift = 0; shift < v_->bitunaries_.size(); ++shift){
-        if (!v_->bitunaries_[shift].get_bit(bitunary_poses_[shift])){
+      for (uint64_t shift = 0; shift < dagv_->bitunaries_.size(); ++shift){
+        if (!dagv_->bitunaries_[shift].get_bit(bitunary_poses_[shift])){
           return shift;
         }
       }
-      return v_->bitunaries_.size();
+      return dagv_->bitunaries_.size();
     }
 
-    const dag_vector* v_;  
+    const dag_vector* dagv_;  
     std::vector<uint64_t> bitval_poses_;
     std::vector<uint64_t> bitunary_poses_;
     uint64_t max_shift_pos_;

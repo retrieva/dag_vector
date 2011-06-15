@@ -24,7 +24,7 @@
 #include <vector>
 #include <stdint.h>
 #include <map>
-#include "dav_vector.hpp"
+#include "dag_vector.hpp"
 
 namespace dag{
 
@@ -88,14 +88,12 @@ public:
    * The elements in the vector are not changed after this operation. 
    */
   void remap(){
-    std::cout << dagv_.alloc_byte_num() << " ";
     std::vector<uint64_t> old2new;
     get_old2new(old2new);
 
-    remap_davv(old2new);
+    remap_dagv(old2new);
     remap_t2val(old2new);
     remap_val2t(old2new);
-    std::cout << dagv_.alloc_byte_num() << std::endl;
   }
 
   /**
@@ -117,8 +115,8 @@ public:
   /**
    * Return the working space in bytes
    */
-  uint64_t alloc_byte_num() const{
-    return dagv_.alloc_byte_num();
+  uint64_t get_alloc_byte_num() const{
+    return dagv_.get_alloc_byte_num();
   }
 
   /**
@@ -135,6 +133,7 @@ public:
 
     const_iterator& operator++(){
       ++pos_;
+      return *this;
     }
     const_iterator operator++(int){
       const_iterator tmp(*this);
@@ -144,6 +143,7 @@ public:
 
     const_iterator& operator--(){
       --pos_;
+      return *this;
     }
 
     const_iterator operator--(int){
@@ -183,10 +183,12 @@ public:
 
 
 private:
+  static const uint64_t min_need_remap_size_ = 4096;
+
   bool need_remap(){
     if (!auto_remap_) return false;
     uint64_t size = dagv_.size();
-    if (size < 1024){
+    if (size < min_need_remap_size_){
       return false;
     }
     if (size != (size & -size)){
@@ -212,7 +214,7 @@ private:
       counter[i].second = i;
     }
 
-    for (dav_vector::const_iterator it = dagv_.begin();
+    for (dag_vector::const_iterator it = dagv_.begin();
          it != dagv_.end(); ++it){
       counter[*it].first++;
 
@@ -224,9 +226,9 @@ private:
     }
   }
 
-  void remap_davv(const std::vector<uint64_t>& old2new){
-    dav_vector new_dagv;
-    for (dav_vector::const_iterator it = dagv_.begin();
+  void remap_dagv(const std::vector<uint64_t>& old2new){
+    dag_vector new_dagv;
+    for (dag_vector::const_iterator it = dagv_.begin();
            it != dagv_.end(); ++it){
       new_dagv.push_back(old2new[*it]);
     }

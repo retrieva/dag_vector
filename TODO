@@ -1,0 +1,3 @@
+- test codes for all public interfaces
+- improve the performance. Especially, remap()
+- add document
