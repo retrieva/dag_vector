@@ -1,0 +1,75 @@
+Author: Daisuke Okanohara (daisuke.okanoahra@gmail.com)
+
+dag_vector is direct accessible gamma code Vvctor. 
+dag_vector stores positive values space-efficiently, and supports push_back() and fast random access. 
+
+comp_vector is compressed vector for arbitrary objects using dag_vector inside.
+The object should support comparator (bool operator< (const object& ) const). 
+If the frequency of elements is skewed, comp_vector efficiently stores objects while allow fast random access.  
+ 
+See examples below, and implementation details in doc/*.
+
+usage : dag_vector
+==================
+
+#include <dag/dag_vector.hpp>
+
+dag::dag_vector dv;
+
+// you can use dag_vector as vector<uint64_t>
+// the working space is same as the gamma code. For an positive integer x, it requires 2log2(x+1) - 1 bits
+// For example, "0" requires 1 bits, "7" requires 5 bits, and 100 requires 13 bits.
+
+dv.push_back(7);
+dv.push_back(1);
+dv.push_back(100);
+dv.push_back(0);
+dv.push_back(1000000000);
+
+// All operations are const except push_back();
+// To lookup dv[i], it requires O(log dv[i]) time.
+
+assert(dv[0] == 7);
+assert(dv[1] == 1);
+assert(dv[2] == 100);
+assert(dv[3] == 0);
+assert(dv[4] == 1000000000);
+
+// dag_vector supports sum() operation
+// dv.sum(i) returns dv[0] + dv[1] + ... + dv[i-1] in O(log max_val) time
+// where max_val = max(dv[0], dv[1], ...dv[i-1])
+
+assert(dv.sum(0) == 0);
+assert(dv.sum(1) == 7);
+assert(dv.sum(2) == 8);
+assert(dv.sum(3) == 108);
+assert(dv.sum(4) == 108);
+assert(dv.sum(5) == 1000000108);
+
+
+usage : comp_vector
+===================
+
+#include <dag/comp_vector.hpp>
+
+dag::comp_vector<string> cv; 
+
+cv.push_back(string("hoge"));
+cv.push_back(string("fuga"));
+cv.push_back(string("hoge"));
+cv.push_back(string("hoge"));
+cv.push_back(string("fuga"));
+
+assert(cv[0] == "hoge");
+assert(cv[1] == "fuga");
+assert(cv[2] == "hoge");
+assert(cv[3] == "hoge");
+assert(cv[4] == "fuga");
+
+
+
+
+
+
+
+
