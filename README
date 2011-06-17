@@ -71,4 +71,4 @@ assert(cv[4] == "fuga");
 
 Acknowledgement
 ===============
-I use criterion.h for performance test. Thanks tanakh.
+I use criterion.h (https://github.com/tanakh/criterion) for performance test. Thanks tanakh.
