@@ -69,3 +69,6 @@ assert(cv[2] == "hoge");
 assert(cv[3] == "hoge");
 assert(cv[4] == "fuga");
 
+Acknowledgement
+===============
+I use criterion.h for performance test. Thanks tanakh.

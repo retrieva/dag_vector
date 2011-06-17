@@ -49,8 +49,7 @@ public:
    */
   void push_back(uint64_t val){
     uint64_t val1 = val+1;
-    uint64_t shift = 0;
-    for (; (val1 >> shift) > 1; ++shift){}
+    uint64_t shift = binary_len(val1);
     resize(shift);
     for (size_t i = 0; i < shift; ++i){
       bitvals_[i].push_back((val1 >> i) & 0x1LLU);
@@ -73,14 +72,12 @@ public:
     uint64_t val = 0;
     for (uint64_t shift = 0; shift < bitunaries_.size(); ++shift){
       if (!bitunaries_[shift].get_bit(ind)){
-        return val + ((1LLU) << shift) - 1;
+        return val + ((1LLU) << shift) -1;
       }
       ind = bitunaries_[shift].rank(ind);
       val += bitvals_[shift].get_bit(ind) << shift;
     }
-    val += (1LLU) << bitunaries_.size(); 
-
-    return val-1;
+    return val + ((1LLU) << bitunaries_.size()) - 1; 
   }
 
   /**
@@ -98,8 +95,7 @@ public:
       ret += bitvals_[shift].rank(ones) << shift;
       ind = ones;
     }
-    ret += ind << bitunaries_.size();
-    return ret - orig_ind;
+    return ret + (ind << bitunaries_.size()) - orig_ind;
   }
 
   /**
@@ -183,42 +179,37 @@ public:
 
   class const_iterator : public std::iterator<std::random_access_iterator_tag, uint64_t, size_t> {
   public:
-    const_iterator(const dag_vector* dagv) : dagv_(dagv) {
-      bitval_poses_.resize(dagv_->bitvals_.size());
-      bitunary_poses_.resize(dagv_->bitunaries_.size());
-      max_shift_pos_ = 0;
-      cur_shift_ = cur_shift();
+    const_iterator(const dag_vector* dagv) : dagv_(*dagv) {
+      bitval_poses_.resize(dagv_.bitvals_.size());
+      bitunary_poses_.resize(dagv_.bitunaries_.size()+1);
+      set_cur_val();
     }
 
     const_iterator& end(){
       for (size_t i = 0; i < bitval_poses_.size(); ++i){
-        bitval_poses_[i] = dagv_->bitvals_[i].size();
-
+        bitval_poses_[i] = dagv_.bitvals_[i].size();
       }
-
-      for (size_t i = 0; i < bitunary_poses_.size(); ++i){
-        bitunary_poses_[i] = dagv_->bitunaries_[i].size();
+      for (size_t i = 1; i < bitunary_poses_.size(); ++i){
+        bitunary_poses_[i-1] = dagv_.bitunaries_[i-1].size();
       }
-
-      max_shift_pos_ = dagv_->max_shift_num_;
+      bitunary_poses_.back() = dagv_.max_shift_num_;
+      cur_val_ = 0;
       cur_shift_ = bitval_poses_.size();
       return *this;
     }
 
     const_iterator& operator++(){
-      for (size_t i = 0; i < bitunary_poses_.size(); ++i){
+      for (size_t i = 0; ; ++i){
         ++bitunary_poses_[i];
         if (i == cur_shift_){
           break;
         }
         ++bitval_poses_[i];
       }
-      if (cur_shift_ == bitunary_poses_.size()){
-        ++max_shift_pos_;
-      }
-      cur_shift_ = cur_shift(); 
+      set_cur_val(); 
       return *this;
     }
+
     const_iterator operator++(int){
       const_iterator tmp(*this);
       ++*this;
@@ -233,11 +224,8 @@ public:
         }
         --bitval_poses_[i];
       }
-      if (cur_shift_ == bitunary_poses_.size()){
-        --max_shift_pos_;
-      }
 
-      cur_shift_ = cur_shift();
+      set_cur_val();
       return *this;
     }
 
@@ -248,18 +236,11 @@ public:
     }
 
     size_t operator-(const const_iterator& it) const{
-      if (bitunary_poses_.size() > 0){
-        return bitunary_poses_[0] - it.bitunary_poses_[0];
-      }  else {
-        return max_shift_pos_ - it.max_shift_pos_;
-      }
+      return bitunary_poses_[0] - it.bitunary_poses_[0];
     }
 
     bool operator==(const const_iterator& it) const{
-      if (dagv_ != it.dagv_) return false;
       if (bitval_poses_ != it.bitval_poses_) return false;
-      if (bitunary_poses_ != it.bitunary_poses_) return false;
-      if (max_shift_pos_ != it.max_shift_pos_)  return false;
       return true;
     }
 
@@ -268,30 +249,27 @@ public:
     }
 
     uint64_t operator*() const {
-      uint64_t val = 0;
-      uint64_t shift = 0;
-      for ( ; shift < cur_shift_; ++shift){ 
-        val += dagv_->bitvals_[shift].get_bit(bitval_poses_[shift]) << shift;
-      }
-      val += (1LLU) << shift;
-      return val-1;
+      return cur_val_;
     }
 
   private:
-    uint64_t cur_shift() const{
-      for (uint64_t shift = 0; shift < dagv_->bitunaries_.size(); ++shift){
-        if (!dagv_->bitunaries_[shift].get_bit(bitunary_poses_[shift])){
-          return shift;
-        }
+    void set_cur_val() {
+      uint64_t val = 0; 
+      cur_shift_ = 0;
+      for (; cur_shift_ < dagv_.bitunaries_.size(); ++cur_shift_){
+          if (!dagv_.bitunaries_[cur_shift_].get_bit(bitunary_poses_[cur_shift_])){
+            break;
+          }
+          val += dagv_.bitvals_[cur_shift_].get_bit(bitval_poses_[cur_shift_]) << cur_shift_;
       }
-      return dagv_->bitunaries_.size();
+      cur_val_ = val + (1LLU << cur_shift_) - 1;
     }
 
-    const dag_vector* dagv_;  
+    const dag_vector& dagv_;  
     std::vector<uint64_t> bitval_poses_;
     std::vector<uint64_t> bitunary_poses_;
-    uint64_t max_shift_pos_;
     uint64_t cur_shift_;
+    uint64_t cur_val_;
   };
 
   const_iterator begin() const{
@@ -303,17 +281,24 @@ public:
     return it.end();
   }
 
+  static uint64_t binary_len(uint64_t val){
+    uint64_t shift = 0;
+    for (; (val >> shift) > 1; ++shift){}
+    return shift;
+  }
+
 private:
   void resize(uint64_t shift){
     uint64_t old_shift = bitunaries_.size();    
-    if (shift > old_shift){
-      bitunaries_.resize(shift);
-      bitvals_.resize(shift);
-      for (size_t i = 0; i < max_shift_num_; ++i){
-        bitunaries_[old_shift].push_back(0);
-      }
-      max_shift_num_ = 0;
+    if (shift <= old_shift){
+      return;
     }
+    bitunaries_.resize(shift);
+    bitvals_.resize(shift);
+    for (size_t i = 0; i < max_shift_num_; ++i){
+      bitunaries_[old_shift].push_back(0);
+    }
+    max_shift_num_ = 0;
   }
 
   std::vector<rank_vector> bitunaries_; /// unary codes
@@ -322,7 +307,7 @@ private:
   uint64_t max_shift_num_;              /// the number of codes whose have the largest lengths
 };
 
-
 }
 
 #endif // DAG_VECTOR_HPP_
+

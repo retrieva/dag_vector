@@ -6,7 +6,7 @@ using namespace std;
 
 int main(int argc, char* argv[]){
   int n = 10000;
-  int vmax = 10000;
+  int vmax = 100;
   if (argc >= 2){
     n = atoi(argv[1]);
   }
@@ -31,7 +31,7 @@ int main(int argc, char* argv[]){
     return -1;
   }
 
-  for (uint64_t i = vals.size()-1; i < vals.size(); ++i){
+  for (uint64_t i = 0; i < vals.size(); ++i){
     if (dagv[i] != vals[i]){
       cout << "Error [] i=" << i << " dagv[i]=" << dagv[i] << " vals[i]=" << vals[i] << endl;
     }

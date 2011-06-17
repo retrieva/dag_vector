@@ -69,8 +69,9 @@ public:
    */
   void push_back(const T& t){
     dagv_.push_back(get_val(t));
-    if (need_remap()){
-      remap();
+    std::vector<std::pair<uint64_t, uint64_t> > counter;
+    if (need_remap(counter)){
+      remap(counter);
     }
   }
 
@@ -87,9 +88,9 @@ public:
    * Reassign the internal gamma code to shrink the working space.
    * The elements in the vector are not changed after this operation. 
    */
-  void remap(){
+  void remap(std::vector<std::pair<uint64_t, uint64_t> >& counter){
     std::vector<uint64_t> old2new;
-    get_old2new(old2new);
+    get_old2new(counter, old2new);
 
     remap_dagv(old2new);
     remap_t2val(old2new);
@@ -184,8 +185,9 @@ public:
 
 private:
   static const uint64_t min_need_remap_size_ = 4096;
-
-  bool need_remap(){
+  static const float shrink_rate_ = 0.7;
+  
+  bool need_remap(std::vector<std::pair<uint64_t, uint64_t> >& counter){
     if (!auto_remap_) return false;
     uint64_t size = dagv_.size();
     if (size < min_need_remap_size_){
@@ -194,8 +196,38 @@ private:
     if (size != (size & -size)){
       return false;
     }
+
+    get_counter(counter);
+    uint64_t old_len = 0;
+    uint64_t new_len = 0;
+    for (size_t i = 0; i < counter.size(); ++i){
+      new_len += counter[i].first * (2 * dag_vector::binary_len(i+1) - 1);
+      old_len += counter[i].first * (2 * dag_vector::binary_len(counter[i].second+1) - 1);
+    }
+
+    if ((float)new_len >= (float)old_len * shrink_rate_ ) {
+      return false;
+    }
+    
     return true;
   }
+
+  void get_counter(std::vector<std::pair<uint64_t, uint64_t> >& counter){
+    counter.clear();
+    counter.resize(t2val_.size());
+    for (size_t i = 0; i < counter.size(); ++i){
+      counter[i].second = i;
+    }
+
+    for (dag_vector::const_iterator it = dagv_.begin();
+         it != dagv_.end(); ++it){
+      counter[*it].first++;
+
+    }
+    sort(counter.rbegin(), counter.rend());
+  }
+
+
 
   uint64_t get_val(const T& t){
     typename std::map<T, uint64_t>::const_iterator it = t2val_.find(t);
@@ -208,18 +240,8 @@ private:
     return newID;
   }
 
-  void get_old2new(std::vector<uint64_t>& old2new){
-    std::vector<std::pair<uint64_t, uint64_t> > counter(t2val_.size());
-    for (size_t i = 0; i < counter.size(); ++i){
-      counter[i].second = i;
-    }
-
-    for (dag_vector::const_iterator it = dagv_.begin();
-         it != dagv_.end(); ++it){
-      counter[*it].first++;
-
-    }
-    sort(counter.rbegin(), counter.rend());
+  void get_old2new(const std::vector<std::pair<uint64_t, uint64_t> >& counter, 
+                   std::vector<uint64_t>& old2new){
     old2new.resize(t2val_.size());
     for (size_t i = 0; i < counter.size(); ++i){
       old2new[counter[i].second] = i;
