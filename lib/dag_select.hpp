@@ -151,11 +151,6 @@ public:
   }
 
   uint64_t get_alloc_byte_num() const{
-    std::cout << "high_zero_num:" << high_one_.sum() << " high_one_num:" << high_zero_.sum() << " low_width_:" << low_width_ << std::endl;
-    std::cout << "high_one_:" << high_one_.get_alloc_byte_num() << " " << high_one_.height() << std::endl;
-    std::cout << "high_zero_:" << high_zero_.get_alloc_byte_num() << " " << high_zero_.height() << std::endl;
-    std::cout << "low_:" << low_.get_alloc_byte_num() << std::endl;
-    std::cout << "high_bv_:" << high_bv_.get_alloc_byte_num() << std::endl;
     return high_one_.get_alloc_byte_num()
       + high_zero_.get_alloc_byte_num()
       + low_.get_alloc_byte_num()
