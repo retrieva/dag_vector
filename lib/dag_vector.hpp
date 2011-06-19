@@ -34,7 +34,7 @@ public:
   /**
    * Constructor
    */
-  dag_vector(): size_(0), max_shift_num_(0){
+  dag_vector(): size_(0), sum_(0), max_shift_num_(0){
   }
 
   /**
@@ -61,6 +61,7 @@ public:
       bitunaries_[shift].push_back(0);
     }
     size_++;
+    sum_ += val;
   }
 
   /**
@@ -86,7 +87,7 @@ public:
    * @param ind the index
    * @return the sum of v[0] v[1] ... v[ind-1]
    */
-  uint64_t sum(uint64_t ind) const{
+  uint64_t prefix_sum(uint64_t ind) const{
     uint64_t orig_ind = ind;
     uint64_t ret = 0;
     for (uint64_t shift = 0; shift < bitunaries_.size(); ++shift){
@@ -103,7 +104,7 @@ public:
    * @param ind the index
    * @return the pair of the prefix sum (sum of v[0] v[1] ... v[ind-1]) and v[ind]
    */
-  std::pair<uint64_t, uint64_t> sumval(uint64_t ind) const{
+  std::pair<uint64_t, uint64_t> prefix_sum_val(uint64_t ind) const{
     uint64_t orig_ind = ind;
     uint64_t sum = 0;
     uint64_t val = 0;
@@ -137,6 +138,16 @@ public:
   }
 
   /**
+   * Return the sum of values
+   * @return the sum of values
+   */
+  uint64_t sum() const{
+    return sum_;
+  }
+
+
+
+  /**
    * Swap the content
    * @param dagv the dag_vector to be swapped
    */
@@ -144,6 +155,7 @@ public:
     bitvals_.swap(dagv.bitvals_);
     bitunaries_.swap(dagv.bitunaries_);
     std::swap(size_, dagv.size_);
+    std::swap(sum_,  dagv.sum_);
     std::swap(max_shift_num_, dagv.max_shift_num_);
   }
 
@@ -177,22 +189,29 @@ public:
     return byte_num;
   }
 
+  /**
+   *
+   */
+  size_t height() const {
+    return bitunaries_.size();
+  }
+
   class const_iterator : public std::iterator<std::random_access_iterator_tag, uint64_t, size_t> {
   public:
-    const_iterator(const dag_vector* dagv) : dagv_(*dagv) {
-      bitval_poses_.resize(dagv_.bitvals_.size());
-      bitunary_poses_.resize(dagv_.bitunaries_.size()+1);
+    const_iterator(const dag_vector& dagv) : bitunaries_(dagv.bitunaries_), bitvals_(dagv.bitvals_) {
+      bitunary_poses_.resize(bitunaries_.size()+1);
+      bitval_poses_.resize(bitvals_.size());
       set_cur_val();
     }
 
-    const_iterator& end(){
+    const_iterator& end(const dag_vector& dagv){
       for (size_t i = 0; i < bitval_poses_.size(); ++i){
-        bitval_poses_[i] = dagv_.bitvals_[i].size();
+        bitval_poses_[i] = bitvals_[i].size();
       }
       for (size_t i = 1; i < bitunary_poses_.size(); ++i){
-        bitunary_poses_[i-1] = dagv_.bitunaries_[i-1].size();
+        bitunary_poses_[i-1] = bitunaries_[i-1].size();
       }
-      bitunary_poses_.back() = dagv_.max_shift_num_;
+      bitunary_poses_.back() = dagv.max_shift_num_;
       cur_val_ = 0;
       cur_shift_ = bitval_poses_.size();
       return *this;
@@ -256,16 +275,17 @@ public:
     void set_cur_val() {
       uint64_t val = 0; 
       cur_shift_ = 0;
-      for (; cur_shift_ < dagv_.bitunaries_.size(); ++cur_shift_){
-          if (!dagv_.bitunaries_[cur_shift_].get_bit(bitunary_poses_[cur_shift_])){
+      for (; cur_shift_ < bitunaries_.size(); ++cur_shift_){
+          if (!bitunaries_[cur_shift_].get_bit(bitunary_poses_[cur_shift_])){
             break;
           }
-          val += dagv_.bitvals_[cur_shift_].get_bit(bitval_poses_[cur_shift_]) << cur_shift_;
+          val += bitvals_[cur_shift_].get_bit(bitval_poses_[cur_shift_]) << cur_shift_;
       }
       cur_val_ = val + (1LLU << cur_shift_) - 1;
     }
 
-    const dag_vector& dagv_;  
+    const std::vector<rank_vector>& bitunaries_;
+    const std::vector<rank_vector>& bitvals_;
     std::vector<uint64_t> bitval_poses_;
     std::vector<uint64_t> bitunary_poses_;
     uint64_t cur_shift_;
@@ -273,12 +293,12 @@ public:
   };
 
   const_iterator begin() const{
-    return const_iterator(this);
+    return const_iterator(*this);
   }
   
   const_iterator end() const{
-    const_iterator it = const_iterator(this);
-    return it.end();
+    const_iterator it = const_iterator(*this);
+    return it.end(*this);
   }
 
   static uint64_t binary_len(uint64_t val){
@@ -304,6 +324,7 @@ private:
   std::vector<rank_vector> bitunaries_; /// unary codes
   std::vector<rank_vector> bitvals_;    /// value codes
   uint64_t size_;                       /// the number of codes
+  uint64_t sum_;                        /// the sum of values 
   uint64_t max_shift_num_;              /// the number of codes whose have the largest lengths
 };
 

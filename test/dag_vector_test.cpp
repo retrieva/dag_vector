@@ -13,6 +13,7 @@ int main(int argc, char* argv[]){
   if (argc >= 3){
     vmax = atoi(argv[2]);
   }
+
   cout << "n=" << n << " vmax=" << vmax << endl; 
   dag::dag_vector dagv;
   vector<uint64_t> vals;
@@ -35,8 +36,8 @@ int main(int argc, char* argv[]){
     if (dagv[i] != vals[i]){
       cout << "Error [] i=" << i << " dagv[i]=" << dagv[i] << " vals[i]=" << vals[i] << endl;
     }
-    if (dagv.sum(i) != sums[i]){
-      cout << "Error sum i=" << i << " dagv.sum(i)=" << dagv.sum(i) << " sums[i]=" << sums[i] << endl;
+    if (dagv.prefix_sum(i) != sums[i]){
+      cout << "Error prefix_sum i=" << i << " dagv.prefix_sum(i)=" << dagv.prefix_sum(i) << " prefix_sums[i]=" << sums[i] << endl;
     }
   }
   

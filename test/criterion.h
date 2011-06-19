@@ -120,7 +120,7 @@ public:
 
 inline clock_time get_clock_time()
 {
-  timeval tv = {};
+  timeval tv;
   int res = gettimeofday(&tv, NULL);
   if (res!=0) return clock_time(0,0);
   return clock_time(tv.tv_sec, tv.tv_usec);
@@ -392,7 +392,7 @@ public:
 
 class statistics {
 public:
-  statistics(const std::string &id, group &gr, int t = 100)
+  statistics(const std::string &id, group &gr, int t = 10)
     : identifier_(id), gr_(gr), times_(t)
     , count_(0), iters_(0), icnt_(0)
     , start_(0, 0), end_(0, 0) {
