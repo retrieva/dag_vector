@@ -83,7 +83,7 @@ public:
    * Add element to the end of the array
    * @param val an element to be added
    */
-  void push_back(uint64_t val){
+  void set_next_bit(uint64_t val){
     ++one_num_;
     uint64_t high = (low_width_ == BLOCK_SIZE) ? 0 : val >> low_width_;
     uint64_t prev_high = (low_width_ == BLOCK_SIZE) ? 0 : prev_val_ >> low_width_;
@@ -159,7 +159,7 @@ public:
         break;
       }
     }
-    return cur_rank;
+    return low_pos;
   }
 
   /**
@@ -188,7 +188,7 @@ public:
       high += *old_it;
       uint64_t low = low_.get_bits(i * low_width_, low_width_);
       uint64_t val = (high << low_width_) + low;
-      new_sparse_vector.push_back(val);
+      new_sparse_vector.set_next_bit(val);
     }
     swap(new_sparse_vector);
   }
@@ -280,6 +280,7 @@ public:
 
   private:
     void advance(){
+
       for (;;++high_prefix_val_){
         if (high_bv_.get_bit(high_pos_++)){
           break;

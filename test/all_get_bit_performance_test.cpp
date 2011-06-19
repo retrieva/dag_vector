@@ -29,7 +29,7 @@ int main(int argc, char* argv[]){
     sum += v;
     vals.push_back(sum);
     dv.push_back(v);
-    ds.push_back(sum);
+    ds.set_next_bit(sum);
     for (uint64_t j = 0; j < v; ++j){
       bv.push_back(0, 1);
     }

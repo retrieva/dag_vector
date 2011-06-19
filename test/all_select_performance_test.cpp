@@ -25,7 +25,7 @@ int main(int argc, char* argv[]){
     sum += v;
     vals.push_back(sum);
     dagv.push_back(v);
-    ds.push_back(sum);
+    ds.set_next_bit(sum);
   }
 
   cout << "size" << endl;
@@ -34,6 +34,7 @@ int main(int argc, char* argv[]){
   cout << "  ds:" << ds.get_alloc_byte_num() << endl;
 
   bgroup("sequeantial") {
+    /*
     bench("vector"){
       for (size_t i = 0; i < vals.size(); ++i){
         sum += vals[i];
@@ -59,6 +60,7 @@ int main(int argc, char* argv[]){
       }
     }
 
+    */
     bench("sparse_vector iterator"){
       dag::sparse_vector::const_iterator end = ds.end();
       dag::sparse_vector::const_iterator it = ds.begin();
