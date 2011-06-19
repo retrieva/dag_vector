@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "criterion.h"
 #include "../lib/dag_vector.hpp"
-#include "../lib/dag_select.hpp"
+#include "../lib/sparse_vector.hpp"
 
 using namespace std;
 
@@ -18,7 +18,7 @@ int main(int argc, char* argv[]){
 
   vector<uint64_t> vals;
   dag::dag_vector dagv;
-  dag::dag_select ds(size, maxval / 2 * size);
+  dag::sparse_vector ds(size, maxval / 2 * size);
   uint64_t sum = 0;
   for (int i = 0; i < size; ++i){
     uint64_t v = rand() % maxval;
@@ -53,15 +53,15 @@ int main(int argc, char* argv[]){
       }
     }
 
-    bench("dag_select select"){
-      for (size_t i = 0; i < ds.size(); ++i){
+    bench("sparse_vector select"){
+      for (size_t i = 0; i < ds.one_num(); ++i){
         sum += ds.select(i);
       }
     }
 
-    bench("dag_select iterator"){
-      dag::dag_select::const_iterator end = ds.end();
-      dag::dag_select::const_iterator it = ds.begin();
+    bench("sparse_vector iterator"){
+      dag::sparse_vector::const_iterator end = ds.end();
+      dag::sparse_vector::const_iterator it = ds.begin();
       for (size_t i = 0; i < vals.size(); ++i, ++it){
         //for (; it != end; ++it){
         sum += *it;

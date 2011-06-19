@@ -17,49 +17,74 @@
  *      software without specific prior written permission.
  */
 
-#ifndef DAG_SELECT_HPP_
-#define DAG_SELECT_HPP_
+#ifndef SPARSE_VECTOR_HPP_
+#define SPARSE_VECTOR_HPP_
 
 #include "dag_vector.hpp"
 #include "bit_vector.hpp"
 
 namespace dag{
 
-class dag_select{
+/**
+ * Sparse Vector supporting rank/select operations
+ */
+class sparse_vector{
 public:
-  dag_select() {
+  /**
+   * Constructor
+   */
+  sparse_vector() {
     clear();
   }
 
-  dag_select(uint64_t low_width) {
+  /**
+   * Constructor given low_width
+   * @param low_width the width of low array
+   */
+  sparse_vector(uint64_t low_width) {
     clear();
     low_width_ = low_width;
     mask_ = (low_width_ == BLOCK_SIZE) ? 0xFFFFFFFFFFFFFFFF : (1 << low_width_) - 1;    
   }
 
-  dag_select(uint64_t one_num, uint64_t all_num){
+  /**
+   * Constructor given one_num and num
+   * @param one_num the number of expected ones in the array
+   * @param num the number of expected bits in the array
+   */
+  sparse_vector(uint64_t one_num, uint64_t num){
     clear();
     if (one_num == 0) return;
-    uint64_t dist = all_num / one_num;
+    uint64_t dist = num / one_num;
     for (low_width_ = 0; dist >> low_width_; ++low_width_) {}
     mask_ = (low_width_ == BLOCK_SIZE) ? 0xFFFFFFFFFFFFFFFF : (1 << low_width_) - 1;    
   }
 
-  ~dag_select(){
+  /**
+   * Desctructor
+   */
+  ~sparse_vector(){
   }
 
+  /**
+   * Clear sparse vector
+   */
   void clear(){
     high_one_.clear();
     high_zero_.clear();
     low_.clear();
-    size_ = 0;
+    one_num_ = 0;
     low_width_ = BLOCK_SIZE;
     prev_val_ = 0;
     run_ones_ = 0;
   }
 
+  /**
+   * Add element to the end of the array
+   * @param val an element to be added
+   */
   void push_back(uint64_t val){
-    ++size_;
+    ++one_num_;
     uint64_t high = (low_width_ == BLOCK_SIZE) ? 0 : val >> low_width_;
     uint64_t prev_high = (low_width_ == BLOCK_SIZE) ? 0 : prev_val_ >> low_width_;
     uint64_t dist = high - prev_high;
@@ -77,6 +102,11 @@ public:
     low_.push_back(val & mask_, low_width_);
   }
 
+  /**
+   * Return the position of (rank+1)-th one in the array
+   * @param rank the rank of the position
+   * @return the position of (ran+1)-th one in the array
+   */
   uint64_t select(uint64_t rank) const{
     uint64_t rank1 = rank + 1;
     uint64_t high = high_one_.prefix_sum(rank1);
@@ -84,6 +114,11 @@ public:
     return (high << low_width_) + low;
   }
 
+  /**
+   * Return the pos-th bit
+   * @param pos the position in the array
+   * @return the bit at the pos-th position.
+   */
   uint64_t get_bit(uint64_t pos) const{
     uint64_t high = (low_width_ == BLOCK_SIZE) ? 0 : pos >> low_width_;
     uint64_t low  = pos & mask_;
@@ -105,6 +140,11 @@ public:
     return 0;
   }
 
+  /**
+   * Return the number of ones in B_[0...pos-1]
+   * @param pos the position in the array 
+   * @return the number of ones in B_[0...pos-1]
+   */
   uint64_t rank(uint64_t pos) const{
     uint64_t high = (low_width_ == BLOCK_SIZE) ? 0 : pos >> low_width_;
     uint64_t low  = pos & mask_;
@@ -122,8 +162,11 @@ public:
     return cur_rank;
   }
 
-  uint64_t size() const {
-    return size_;
+  /**
+   * 
+   */
+  uint64_t one_num() const {
+    return one_num_;
   }
 
   uint64_t low_width() const {
@@ -138,16 +181,16 @@ public:
     for (new_low_width = 0; dist >> new_low_width; ++new_low_width) {}
     if (new_low_width == low_width_) return;
     
-    dag_select new_dag_select(new_low_width);
+    sparse_vector new_sparse_vector(new_low_width);
     dag_vector::const_iterator old_it = high_one_.begin();
     uint64_t high = 0;
-    for (uint64_t i = 0; i < size_; ++i, ++old_it){
+    for (uint64_t i = 0; i < one_num_; ++i, ++old_it){
       high += *old_it;
       uint64_t low = low_.get_bits(i * low_width_, low_width_);
       uint64_t val = (high << low_width_) + low;
-      new_dag_select.push_back(val);
+      new_sparse_vector.push_back(val);
     }
-    swap(new_dag_select);
+    swap(new_sparse_vector);
   }
 
   uint64_t get_alloc_byte_num() const{
@@ -158,11 +201,11 @@ public:
       + sizeof(uint64_t) * 3;
   }
 
-  void swap(dag_select& ds){
+  void swap(sparse_vector& ds){
     high_one_.swap(ds.high_one_);
     high_zero_.swap(ds.high_zero_);
     low_.swap(ds.low_);
-    std::swap(size_, ds.size_);
+    std::swap(one_num_, ds.one_num_);
     std::swap(low_width_, ds.low_width_);
     std::swap(prev_val_, ds.prev_val_);
     std::swap(run_ones_, ds.run_ones_);
@@ -171,24 +214,24 @@ public:
 
   class const_iterator : public std::iterator<std::random_access_iterator_tag, uint64_t, size_t> {
   public:
-    const_iterator(const dag_select& ds) : 
+    const_iterator(const sparse_vector& ds) : 
       low_(ds.low_),
       high_bv_(ds.high_bv_),
       pos_(0),
       high_pos_(0),
       high_prefix_val_(0),
-      size_(ds.size()),
+      one_num_(ds.one_num()),
       low_width_(ds.low_width()){
       advance();
     }
     
-    const_iterator(const dag_select& ds, uint64_t) : 
+    const_iterator(const sparse_vector& ds, uint64_t) : 
       low_(ds.low_),
       high_bv_(ds.high_bv_),
-      pos_(ds.size()),
+      pos_(ds.one_num()),
       high_pos_(high_bv_.size()),
       high_prefix_val_(0),
-      size_(ds.size()),
+      one_num_(ds.one_num()),
       low_width_(ds.low_width()){
     } 
 
@@ -249,7 +292,7 @@ public:
     uint64_t pos_;
     uint64_t high_pos_;
     uint64_t high_prefix_val_;
-    uint64_t size_;
+    uint64_t one_num_;
     const uint64_t low_width_;
   };
 
@@ -258,7 +301,7 @@ public:
   }
   
   const_iterator end() const{
-    return const_iterator(*this, size_);
+    return const_iterator(*this, one_num_);
   }
 
 private:
@@ -268,7 +311,7 @@ private:
   dag_vector high_zero_;
   bit_vector high_bv_;
   bit_vector low_;
-  uint64_t size_;
+  uint64_t one_num_;
   uint64_t low_width_;
   uint64_t prev_val_;
   uint64_t run_ones_;
@@ -277,4 +320,4 @@ private:
 
 }
 
-#endif // DAG_SELECT_HPP_
+#endif // SPARSE_VECTOR_HPP_

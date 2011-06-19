@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../lib/dag_select.hpp"
+#include "../lib/sparse_vector.hpp"
 
 using namespace std;
 
@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
 
   cout << "n=" << n << " vmax=" << vmax << endl;
 
-  dag::dag_select ds(n, vmax / 2 * n + n);
+  dag::sparse_vector ds(n, vmax / 2 * n + n);
   uint64_t sum = 0;
   vector<uint64_t> results;
   vector<uint64_t> bv;
@@ -42,8 +42,8 @@ int main(int argc, char* argv[]){
   }
 
   size_t i = 0;
-  dag::dag_select::const_iterator end = ds.end();
-  for (dag::dag_select::const_iterator it = ds.begin(); it != end; ++it, ++i){
+  dag::sparse_vector::const_iterator end = ds.end();
+  for (dag::sparse_vector::const_iterator it = ds.begin(); it != end; ++it, ++i){
     if (results[i] != *it){
       cout << "Error ds.iterator i=" << i 
            << " results[i]=" << results[i] 

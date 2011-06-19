@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <stdint.h>
 #include "criterion.h"
-#include "../lib/dag_select.hpp"
+#include "../lib/sparse_vector.hpp"
 #include "../lib/bit_vector.hpp"
 
 using namespace std;
@@ -20,7 +20,7 @@ int main(int argc, char* argv[]){
   vector<uint64_t> vals;
   dag::bit_vector bv;
   dag::dag_vector dv;
-  dag::dag_select ds(size, (maxval-1) * size / 2 + size);
+  dag::sparse_vector ds(size, (maxval-1) * size / 2 + size);
   cout << "estimated_sum:" << maxval / 2 * size + size << endl;
   uint64_t one_num = 0;
   uint64_t sum = 0;
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]){
       }
     }
 
-    bench("dag_select get_bit"){
+    bench("sparse_vector get_bit"){
       for (size_t i = 0; i < queries.size(); ++i){
         sum += ds.get_bit(queries[i]);
       }
