@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../lib/sparse_vector.hpp"
+#include "../lib/sparse_set.hpp"
 
 using namespace std;
 
@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
 
   cout << "n=" << n << " vmax=" << vmax << endl;
 
-  dag::sparse_vector ds(n, vmax / 2 * n + n);
+  dag::sparse_set ds(n, vmax / 2 * n + n);
   uint64_t size = 0;
   uint64_t one_num = 0;
   vector<uint64_t> results;
@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
   for (int i = 0; i < n; ++i){
     int dif = rand() % vmax;
     size += dif;
-    ds.set_next_bit(size);
+    ds.push_back(size);
     results.push_back(size);
     for (int j = 0; j < dif; ++j){
       bv.push_back(0);
@@ -47,8 +47,8 @@ int main(int argc, char* argv[]){
   }
 
   size_t i = 0;
-  dag::sparse_vector::const_iterator end = ds.end();
-  for (dag::sparse_vector::const_iterator it = ds.begin(); it != end; ++it, ++i){
+  dag::sparse_set::const_iterator end = ds.end();
+  for (dag::sparse_set::const_iterator it = ds.begin(); it != end; ++it, ++i){
     if (results[i] != *it){
       cout << "Error ds.iterator i=" << i 
            << " results[i]=" << results[i] 
@@ -57,10 +57,10 @@ int main(int argc, char* argv[]){
   }
 
   for (size_t i = 0; i < bv.size(); ++i){
-    if (bv[i] != ds.get_bit(i)){
+    if (bv[i] != ds.exist(i)){
       cout << "Error ds.get_bit i =" << i
            << " bv[i]=" << bv[i]
-           << " ds.get_bit(i)=" << ds.get_bit(i) << endl;
+           << " ds.get_bit(i)=" << ds.exist(i) << endl;
     }
 
     if (ranks[i] != ds.rank(i)){

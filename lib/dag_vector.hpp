@@ -145,8 +145,6 @@ public:
     return sum_;
   }
 
-
-
   /**
    * Swap the content
    * @param dagv the dag_vector to be swapped
@@ -187,13 +185,6 @@ public:
         + sizeof(uint8_t) * block_num;
     }
     return byte_num;
-  }
-
-  /**
-   *
-   */
-  size_t height() const {
-    return bitunaries_.size();
   }
 
   class const_iterator : public std::iterator<std::random_access_iterator_tag, uint64_t, size_t> {

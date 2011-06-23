@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "criterion.h"
 #include "../lib/dag_vector.hpp"
-#include "../lib/sparse_vector.hpp"
+#include "../lib/sparse_set.hpp"
 
 using namespace std;
 
@@ -19,7 +19,7 @@ int main(int argc, char* argv[]){
   vector<uint64_t> vals;
   dag::dag_vector dagv;
   dag::bit_vector bv;
-  dag::sparse_vector ds(size, maxval / 2 * size);
+  dag::sparse_set ds(size, maxval / 2 * size);
   uint64_t sum = 0;
   for (int i = 0; i < size; ++i){
     uint64_t v = rand() % maxval;
@@ -30,7 +30,7 @@ int main(int argc, char* argv[]){
       bv.push_back(0, 1);
     }
     bv.push_back(1, 1);
-    ds.set_next_bit(sum);
+    ds.push_back(sum);
   }
 
   cout << "vals:" << vals.size() * sizeof(uint64_t) << endl;
@@ -66,15 +66,15 @@ int main(int argc, char* argv[]){
       }
     } 
 
-    bench("sparse_vector select"){
-      for (size_t i = 0; i < ds.one_num(); ++i){
+    bench("sparse_set select"){
+      for (size_t i = 0; i < ds.num(); ++i){
         sum += ds.select(i);
       }
     }
 
-    bench("sparse_vector iterator"){
-      dag::sparse_vector::const_iterator end = ds.end();
-      dag::sparse_vector::const_iterator it = ds.begin();
+    bench("sparse_set iterator"){
+      dag::sparse_set::const_iterator end = ds.end();
+      dag::sparse_set::const_iterator it = ds.begin();
       for (size_t i = 0; i < vals.size(); ++i, ++it){
         //for (; it != end; ++it){
         sum += *it;

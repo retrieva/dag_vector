@@ -129,11 +129,16 @@ public:
 
   class const_iterator : public std::iterator<std::random_access_iterator_tag, T, size_t> {
   public:
-    const_iterator(const comp_vector* v, uint64_t pos) : v_(v), pos_(pos) {
+    const_iterator(const comp_vector& v) : 
+      dvit_(v.dagv_.begin()), val2t_(v.val2t_) {
+    }
+    
+    const_iterator(const comp_vector& v, size_t ) : 
+      dvit_(v.dagv_.end()), val2t_(v.val2t_){
     }
 
     const_iterator& operator++(){
-      ++pos_;
+      ++dvit_;
       return *this;
     }
     const_iterator operator++(int){
@@ -143,7 +148,7 @@ public:
     }
 
     const_iterator& operator--(){
-      --pos_;
+      --dvit_;
       return *this;
     }
 
@@ -154,7 +159,7 @@ public:
     }
 
     bool operator==(const const_iterator& it) const{
-      return pos_ == it.pos_;
+      return dvit_ == it.dvit_;
     }
 
     bool operator!=(const const_iterator& it) const{
@@ -162,26 +167,25 @@ public:
     }
 
     size_t operator-(const const_iterator& it) const{
-      return pos_ - it.pos_;
+      return dvit_ - it.dvit_;
     }
 
     const T& operator*() const {
-      return (*v_)[pos_];
+      return val2t_[*dvit_];
     }
 
   private:
-    const comp_vector* v_;  
-    uint64_t pos_;
+    typename dag_vector::const_iterator dvit_;
+    const std::vector<T>& val2t_;
   };
 
   const_iterator begin() const{
-    return const_iterator(this, 0);
+    return const_iterator(*this);
   }
   
   const_iterator end() const{
-    return const_iterator(this, size());
+    return const_iterator(*this, size());
   }
-
 
 private:
   static const uint64_t min_need_remap_size_ = 4096;
