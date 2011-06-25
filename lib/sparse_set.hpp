@@ -105,7 +105,7 @@ public:
    * @param rank the rank of the position
    * @return the position of (ran+1)-th one in the array
    */
-  uint64_t select(uint64_t rank) const{
+  uint64_t operator [] (uint64_t rank) const{
     uint64_t rank1 = rank + 1;
     uint64_t high = high_one_.prefix_sum(rank1);
     uint64_t low = low_.get_bits(rank * low_width_, low_width_);

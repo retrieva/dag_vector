@@ -68,7 +68,7 @@ int main(int argc, char* argv[]){
 
     bench("sparse_set select"){
       for (size_t i = 0; i < ds.num(); ++i){
-        sum += ds.select(i);
+        sum += ds[i];
       }
     }
 

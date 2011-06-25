@@ -39,10 +39,10 @@ int main(int argc, char* argv[]){
   cout << " alloc_byte_num:" << ds.get_alloc_byte_num() << endl; 
 
   for (size_t i = 0; i < results.size(); ++i){
-    if (results[i] != ds.select(i)){
+    if (results[i] != ds[i]){
       cout << "Error ds.select i=" << i 
            << " results[i]=" << results[i] 
-           << " ds.select(i)=" << ds.select(i) << endl;  
+           << " ds.select(i)=" << ds[i] << endl;  
     }
   }
 

@@ -1,17 +1,27 @@
 Author: Daisuke Okanohara (daisuke.okanoahra@gmail.com)
 
-dag_vector is direct accessible gamma code vector. 
-dag_vector stores positive values space-efficiently, and supports push_back() and fast random access. 
+Libarary of a collection of direct accessible vectors.  
 
-The gamma code assigns shorter codes for smaller values.
-For example, the value 0 is represented as "0" and the value 6 is represented as "11010".
+dag_vector
+----------
 
-comp_vector is compressed vector for arbitrary objects using dag_vector inside.
+dag_vector is a direct accessible gamma code vector. 
+dag_vector stores positive integers space-efficiently, and supports push_back() and fast random access. 
+
+comp_vector
+-----------
+
+comp_vector is a compressed vector for arbitrary objects.
+In comp_vector, each distinct object is assigned a unique positive value, and this value is stored by dag_vector. 
 The object should support comparator (bool operator< (const object& ) const). 
-If the frequency of elements is skewed, comp_vector efficiently stores objects while allow fast random access.  
- 
-See examples below, and implementation details in doc/*.
+If the frequency distribution of elements is skewed, comp_vector efficiently stores objects. 
 
+sparse_set
+----------
+
+sparse_set is a space-efficient set for positive integers [0, 1, ...].
+
+ 
 usage : dag_vector
 ==================
 
@@ -38,16 +48,16 @@ assert(dv[2] == 100);
 assert(dv[3] == 0);
 assert(dv[4] == 1000000000);
 
-// dag_vector supports sum() operation
-// dv.sum(i) returns dv[0] + dv[1] + ... + dv[i-1] in O(log max_val) time
+// dag_vector supports prefix_sum() operation
+// dv.prefix_sum(i) returns dv[0] + dv[1] + ... + dv[i-1] in O(log max_val) time
 // where max_val = max(dv[0], dv[1], ...dv[i-1])
 
-assert(dv.sum(0) == 0);
-assert(dv.sum(1) == 7);
-assert(dv.sum(2) == 8);
-assert(dv.sum(3) == 108);
-assert(dv.sum(4) == 108);
-assert(dv.sum(5) == 1000000108);
+assert(dv.prefix_sum(0) == 0);
+assert(dv.prefix_sum(1) == 7);
+assert(dv.prefix_sum(2) == 8);
+assert(dv.prefix_sum(3) == 108);
+assert(dv.prefix_sum(4) == 108);
+assert(dv.prefix_sum(5) == 1000000108);
 
 
 usage : comp_vector
